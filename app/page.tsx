@@ -1,9 +1,16 @@
 'use client';
 import { useState } from 'react';
 
+interface Message {
+  role: string;
+  text: string;
+  correction?: string;
+  newWord?: string;
+}
+
 export default function Home() {
   const [tab, setTab] = useState('chat');
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     { role: 'ai', text: "Hello! I am your English tutor 👋 What is your name?" }
   ]);
   const [input, setInput] = useState('');
@@ -11,13 +18,12 @@ export default function Home() {
 
   async function sendMessage() {
     if (!input.trim() || loading) return;
-    const userMsg = { role: 'user', text: input };
+    const userMsg: Message = { role: 'user', text: input };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
 
     const history = [...messages, userMsg]
-      .filter(m => m.role === 'user' || m.role === 'ai')
       .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
 
     const res = await fetch('/api/chat', {
@@ -27,7 +33,7 @@ export default function Home() {
     });
     const data = await res.json();
     const reply = data.reply;
-    let text = reply, correction = null, newWord = null;
+    let text = reply, correction: string | undefined, newWord: string | undefined;
     const corrMatch = reply.match(/CORRECTION:\s*(.+?)(\n|$)/i);
     const wordMatch = reply.match(/NEW_WORD:\s*(.+?)(\n|$)/i);
     if (corrMatch) { correction = corrMatch[1]; text = text.replace(corrMatch[0], '').trim(); }
@@ -73,16 +79,14 @@ export default function Home() {
         </div>
       )}
 
-      {tab === 'worksheet' && (
-        <WorksheetTab />
-      )}
+      {tab === 'worksheet' && <WorksheetTab />}
     </main>
   );
 }
 
 function WorksheetTab() {
   const [loading, setLoading] = useState(false);
-  const [worksheet, setWorksheet] = useState(null);
+  const [worksheet, setWorksheet] = useState<{worksheet: {words: {word: string, definition: string}[], fillBlanks: string[], encouragement: string}, words: string[], score: number} | null>(null);
   const [emailSent, setEmailSent] = useState(false);
 
   async function generate() {
@@ -107,7 +111,7 @@ function WorksheetTab() {
     <div>
       {!worksheet && !loading && (
         <button onClick={generate} style={{ padding: '12px 24px', background: '#000', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer' }}>
-          Generate this week's worksheet
+          Generate this week&apos;s worksheet
         </button>
       )}
       {loading && <p style={{ color: '#666' }}>Generating worksheet with AI...</p>}
