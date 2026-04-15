@@ -1,7 +1,9 @@
- import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+export async function POST(request) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { worksheet, words, score } = await request.json();
 
 export async function POST(request) {
   const { worksheet, words, score } = await request.json();
